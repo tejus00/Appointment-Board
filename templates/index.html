@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Appointment Board</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <div>
+      <h1>Appointment Board</h1>
+      <p>Manage your team's schedule in one place.</p>
+    </div>
+    <a class="btn primary" href="{{ url_for('add') }}">+ Add Appointment</a>
+  </header>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="alert {{ category }}">{{ message }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <section class="filters card">
+    <form method="get">
+      <div>
+        <label for="date">Filter by date</label>
+        <input id="date" type="date" name="date" value="{{ date_filter }}">
+      </div>
+      <div>
+        <label for="status">Filter by status</label>
+        <select id="status" name="status">
+          <option value="">All statuses</option>
+          {% for s in ["Scheduled", "Completed", "Cancelled"] %}
+          <option value="{{ s }}" {% if status_filter == s %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button class="btn" type="submit">Apply Filters</button>
+      <a class="btn secondary" href="{{ url_for('index') }}">Clear</a>
+    </form>
+  </section>
+
+  <section class="board">
+    {% if appointments %}
+      {% for a in appointments %}
+      <article class="appointment card {{ a.status|lower }}">
+        <div class="appointment-main">
+          <div class="date-box">
+            <strong>{{ a.date[8:10] }}</strong>
+            <span>{{ a.date[5:7] }}/{{ a.date[0:4] }}</span>
+          </div>
+          <div class="details">
+            <div class="title-row">
+              <h2>{{ a.title }}</h2>
+              <span class="status {{ a.status|lower }}">{{ a.status }}</span>
+            </div>
+            <p class="time">{{ a.start_time }} – {{ a.end_time }}</p>
+            {% if a.description %}<p>{{ a.description }}</p>{% endif %}
+          </div>
+        </div>
+        <div class="actions">
+          {% if a.status == "Scheduled" %}
+          <form method="post" action="{{ url_for('complete', appointment_id=a.id) }}">
+            <button class="btn success-btn" type="submit">Complete</button>
+          </form>
+          <a class="btn secondary" href="{{ url_for('edit', appointment_id=a.id) }}">Edit</a>
+          <form method="post" action="{{ url_for('cancel', appointment_id=a.id) }}"
+                onsubmit="return confirm('Cancel this appointment?')">
+            <button class="btn danger" type="submit">Cancel</button>
+          </form>
+          {% else %}
+          <a class="btn secondary" href="{{ url_for('edit', appointment_id=a.id) }}">Edit</a>
+          {% endif %}
+        </div>
+      </article>
+      {% endfor %}
+    {% else %}
+      <div class="empty card">
+        <h2>No appointments found</h2>
+        <p>Try changing your filters or add a new appointment.</p>
+      </div>
+    {% endif %}
+  </section>
+</div>
+</body>
+</html>
