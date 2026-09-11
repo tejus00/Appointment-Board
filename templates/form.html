@@ -1,41 +1,202 @@
 <!doctype html>
+
 <html lang="en">
+
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>{{ mode }} Appointment</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+```
+<meta charset="utf-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1">
+
+<title>
+    {{ mode }} Appointment
+</title>
+
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', path='style.css') }}">
+```
+
 </head>
+
 <body>
+
 <div class="container narrow">
-  <header class="topbar">
+
+```
+<!-- HEADER -->
+
+<header class="topbar">
+
     <div>
-      <h1>{{ mode }} Appointment</h1>
-      <p>Required fields are marked with *.</p>
-    </div>
-    <a class="btn secondary" href="{{ url_for('index') }}">← Back</a>
-  </header>
 
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% for category, message in messages %}
-      <div class="alert {{ category }}">{{ message }}</div>
-    {% endfor %}
-  {% endwith %}
+        <h1>
+            {{ mode }} Appointment
+        </h1>
 
-  <form class="card form" method="post">
-    <label>Title *<input name="title" required maxlength="100" value="{{ appointment.title or '' }}"></label>
-    <label>Description<textarea name="description" rows="4" maxlength="500">{{ appointment.description or '' }}</textarea></label>
-    <div class="two-col">
-      <label>Date *<input type="date" name="date" required value="{{ appointment.date or '' }}"></label>
-      <div></div>
-      <label>Start time *<input type="time" name="start_time" required value="{{ appointment.start_time or '' }}"></label>
-      <label>End time *<input type="time" name="end_time" required value="{{ appointment.end_time or '' }}"></label>
+        <p>
+            Required fields are marked with *.
+        </p>
+
     </div>
-    <div class="form-actions">
-      <a class="btn secondary" href="{{ url_for('index') }}">Cancel</a>
-      <button class="btn primary" type="submit">{{ mode }} Appointment</button>
-    </div>
-  </form>
+
+
+    <a
+        class="btn secondary"
+        href="{{ url_for('index') }}">
+
+        ← Back
+
+    </a>
+
+</header>
+
+
+<!-- ERROR -->
+
+{% if error %}
+
+<div class="alert error">
+
+    {{ error }}
+
 </div>
+
+{% endif %}
+
+
+<!-- FORM -->
+
+<form
+    class="card form"
+    method="post"
+
+
+    {% if mode == "Add" %}
+
+    action="{{ url_for('add') }}"
+
+    {% else %}
+
+    action="{{ url_for(
+        'edit',
+        appointment_id=appointment_id
+    ) }}"
+
+    {% endif %}
+
+
+>
+
+
+    <!-- TITLE -->
+
+    <label>
+
+        Title *
+
+        <input
+            type="text"
+            name="title"
+            required
+            maxlength="100"
+            value="{{ appointment.title or '' }}">
+
+    </label>
+
+
+    <!-- DESCRIPTION -->
+
+    <label>
+
+        Description
+
+        <textarea
+            name="description"
+            rows="4"
+            maxlength="500">{{ appointment.description or '' }}</textarea>
+
+    </label>
+
+
+    <!-- DATE -->
+
+    <label>
+
+        Date *
+
+        <input
+            type="date"
+            name="date"
+            required
+            value="{{ appointment.date or '' }}">
+
+    </label>
+
+
+    <!-- TIME -->
+
+    <div class="two-col">
+
+        <label>
+
+            Start time *
+
+            <input
+                type="time"
+                name="start_time"
+                required
+                value="{{ appointment.start_time or '' }}">
+
+        </label>
+
+
+        <label>
+
+            End time *
+
+            <input
+                type="time"
+                name="end_time"
+                required
+                value="{{ appointment.end_time or '' }}">
+
+        </label>
+
+    </div>
+
+
+    <!-- BUTTONS -->
+
+    <div class="form-actions">
+
+        <a
+            class="btn secondary"
+            href="{{ url_for('index') }}">
+
+            Cancel
+
+        </a>
+
+
+        <button
+            class="btn primary"
+            type="submit">
+
+            {{ mode }} Appointment
+
+        </button>
+
+    </div>
+
+</form>
+```
+
+</div>
+
 </body>
+
 </html>

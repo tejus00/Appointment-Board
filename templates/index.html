@@ -3,10 +3,13 @@
 <html lang="en">
 
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
 
 ```
+<meta charset="utf-8">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1">
+
 <title>Appointment Board</title>
 
 <link rel="stylesheet"
@@ -20,43 +23,61 @@
 <div class="container">
 
 ```
-<!-- Header -->
+<!-- HEADER -->
+
 <header class="topbar">
 
     <div>
-        <h1>Appointment Board</h1>
-        <p>Manage your team's schedule in one place.</p>
+
+        <h1>
+            Appointment Board
+        </h1>
+
+        <p>
+            Manage your team's schedule in one place.
+        </p>
+
     </div>
 
-    <a class="btn primary"
-       href="{{ url_for('add_page') }}">
+    <a
+        class="btn primary"
+        href="{{ url_for('add_page') }}">
+
         + Add Appointment
+
     </a>
 
 </header>
 
 
-<!-- Success Message -->
+<!-- SUCCESS MESSAGE -->
+
 {% if request.query_params.get("message") %}
 
 <div class="alert success">
+
     {{ request.query_params.get("message") }}
+
 </div>
 
 {% endif %}
 
 
-<!-- Error Message -->
+<!-- ERROR MESSAGE -->
+
 {% if request.query_params.get("error") %}
 
 <div class="alert error">
+
     {{ request.query_params.get("error") }}
+
 </div>
 
 {% endif %}
 
 
-<!-- Filters -->
+<!-- FILTERS -->
+
 <section class="filters card">
 
     <form method="get">
@@ -71,8 +92,7 @@
                 id="date"
                 type="date"
                 name="date"
-                value="{{ date_filter }}"
-            >
+                value="{{ date_filter }}">
 
         </div>
 
@@ -83,21 +103,28 @@
                 Filter by status
             </label>
 
-            <select id="status" name="status">
+            <select
+                id="status"
+                name="status">
 
                 <option value="">
                     All statuses
                 </option>
 
-                {% for s in ["Scheduled", "Completed", "Cancelled"] %}
+                {% for s in [
+                    "Scheduled",
+                    "Completed",
+                    "Cancelled"
+                ] %}
 
                 <option
                     value="{{ s }}"
                     {% if status_filter == s %}
                     selected
-                    {% endif %}
-                >
+                    {% endif %}>
+
                     {{ s }}
+
                 </option>
 
                 {% endfor %}
@@ -110,14 +137,18 @@
         <button
             class="btn"
             type="submit">
+
             Apply Filters
+
         </button>
 
 
         <a
             class="btn secondary"
             href="{{ url_for('index') }}">
+
             Clear
+
         </a>
 
     </form>
@@ -125,7 +156,8 @@
 </section>
 
 
-<!-- Appointment Board -->
+<!-- APPOINTMENTS -->
+
 <section class="board">
 
     {% if appointments %}
@@ -138,7 +170,8 @@
             <div class="appointment-main">
 
 
-                <!-- Date -->
+                <!-- DATE -->
+
                 <div class="date-box">
 
                     <strong>
@@ -152,7 +185,8 @@
                 </div>
 
 
-                <!-- Appointment Details -->
+                <!-- DETAILS -->
+
                 <div class="details">
 
                     <div class="title-row">
@@ -160,7 +194,6 @@
                         <h2>
                             {{ a.title }}
                         </h2>
-
 
                         <span
                             class="status {{ a.status|lower }}">
@@ -194,17 +227,21 @@
             </div>
 
 
-            <!-- Actions -->
-            <div class="actions">
+            <!-- ACTIONS -->
 
+            <div class="actions">
 
                 {% if a.status == "Scheduled" %}
 
 
-                <!-- Complete -->
+                <!-- COMPLETE -->
+
                 <form
                     method="post"
-                    action="{{ url_for('complete', appointment_id=a.id) }}">
+                    action="{{ url_for(
+                        'complete',
+                        appointment_id=a.id
+                    ) }}">
 
                     <button
                         class="btn success-btn"
@@ -217,21 +254,31 @@
                 </form>
 
 
-                <!-- Edit -->
+                <!-- EDIT -->
+
                 <a
                     class="btn secondary"
-                    href="{{ url_for('edit_page', appointment_id=a.id) }}">
+                    href="{{ url_for(
+                        'edit_page',
+                        appointment_id=a.id
+                    ) }}">
 
                     Edit
 
                 </a>
 
 
-                <!-- Cancel -->
+                <!-- CANCEL -->
+
                 <form
                     method="post"
-                    action="{{ url_for('cancel', appointment_id=a.id) }}"
-                    onsubmit="return confirm('Cancel this appointment?')">
+                    action="{{ url_for(
+                        'cancel',
+                        appointment_id=a.id
+                    ) }}"
+                    onsubmit="return confirm(
+                        'Cancel this appointment?'
+                    )">
 
                     <button
                         class="btn danger"
@@ -247,10 +294,14 @@
                 {% else %}
 
 
-                <!-- Edit completed/cancelled appointment -->
+                <!-- EDIT -->
+
                 <a
                     class="btn secondary"
-                    href="{{ url_for('edit_page', appointment_id=a.id) }}">
+                    href="{{ url_for(
+                        'edit_page',
+                        appointment_id=a.id
+                    ) }}">
 
                     Edit
 
@@ -268,21 +319,18 @@
 
     {% else %}
 
+    <div class="empty card">
 
-        <!-- Empty State -->
-        <div class="empty card">
+        <h2>
+            No appointments found
+        </h2>
 
-            <h2>
-                No appointments found
-            </h2>
+        <p>
+            Try changing your filters
+            or add a new appointment.
+        </p>
 
-            <p>
-                Try changing your filters
-                or add a new appointment.
-            </p>
-
-        </div>
-
+    </div>
 
     {% endif %}
 

@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles
 
 import sqlite3
 from datetime import datetime
-from urllib.parse import urlencode
+from urllib.parse import quote_plus
 
 
 app = FastAPI(title="Appointment Board")
@@ -14,6 +14,7 @@ DB = "appointments.db"
 
 templates = Jinja2Templates(directory="templates")
 
+# Serve CSS files
 app.mount(
     "/static",
     StaticFiles(directory="static"),
@@ -21,9 +22,9 @@ app.mount(
 )
 
 
-# -----------------------------
-# Database
-# -----------------------------
+# =========================
+# DATABASE
+# =========================
 
 def get_db():
     conn = sqlite3.connect(DB)
@@ -32,6 +33,7 @@ def get_db():
 
 
 def init_db():
+
     conn = get_db()
 
     conn.execute("""
@@ -50,12 +52,22 @@ def init_db():
         "SELECT COUNT(*) FROM appointments"
     ).fetchone()[0]
 
+    # Add sample appointments only if database is empty
     if count == 0:
+
         conn.executemany("""
             INSERT INTO appointments
-            (title, description, date, start_time, end_time, status)
+            (
+                title,
+                description,
+                date,
+                start_time,
+                end_time,
+                status
+            )
             VALUES (?, ?, ?, ?, ?, ?)
         """, [
+
             (
                 "Team Stand-up",
                 "Daily project sync",
@@ -64,6 +76,7 @@ def init_db():
                 "10:00",
                 "Scheduled"
             ),
+
             (
                 "Client Demo",
                 "Demo of the latest build",
@@ -72,6 +85,7 @@ def init_db():
                 "12:00",
                 "Scheduled"
             ),
+
             (
                 "Design Review",
                 "Review dashboard changes",
@@ -80,6 +94,7 @@ def init_db():
                 "15:00",
                 "Completed"
             ),
+
             (
                 "Vendor Call",
                 "Discuss integration timeline",
@@ -94,9 +109,9 @@ def init_db():
     conn.close()
 
 
-# -----------------------------
-# Validation
-# -----------------------------
+# =========================
+# VALIDATION
+# =========================
 
 def validate(
     title,
@@ -106,6 +121,7 @@ def validate(
     exclude_id=None
 ):
 
+    # Required fields
     if not title.strip():
         return "Please fill in all required fields."
 
@@ -118,7 +134,9 @@ def validate(
     if not end_time.strip():
         return "Please fill in all required fields."
 
+    # Validate time format
     try:
+
         start = datetime.strptime(
             start_time,
             "%H:%M"
@@ -130,9 +148,12 @@ def validate(
         )
 
     except ValueError:
+
         return "Please enter valid start and end times."
 
+    # End time must be after start
     if end <= start:
+
         return "End time must be after start time."
 
     # Check overlapping appointments
@@ -142,9 +163,9 @@ def validate(
         SELECT id
         FROM appointments
         WHERE date = ?
-          AND status != 'Cancelled'
-          AND start_time < ?
-          AND end_time > ?
+        AND status != 'Cancelled'
+        AND start_time < ?
+        AND end_time > ?
     """
 
     params = [
@@ -153,7 +174,9 @@ def validate(
         start_time
     ]
 
+    # When editing, don't compare with itself
     if exclude_id is not None:
+
         query += " AND id != ?"
         params.append(exclude_id)
 
@@ -165,6 +188,7 @@ def validate(
     conn.close()
 
     if conflict:
+
         return (
             "That time slot is already booked. "
             "Please choose another time."
@@ -173,11 +197,15 @@ def validate(
     return None
 
 
-# -----------------------------
-# Home / Appointment Board
-# -----------------------------
+# =========================
+# HOME PAGE
+# =========================
 
-@app.get("/", response_class=HTMLResponse)
+@app.get(
+    "/",
+    response_class=HTMLResponse,
+    name="index"
+)
 def index(
     request: Request,
     date: str = "",
@@ -195,10 +223,12 @@ def index(
     params = []
 
     if date:
+
         query += " AND date = ?"
         params.append(date)
 
     if status:
+
         query += " AND status = ?"
         params.append(status)
 
@@ -214,9 +244,9 @@ def index(
     conn.close()
 
     return templates.TemplateResponse(
-        "index.html",
-        {
-            "request": request,
+        request=request,
+        name="index.html",
+        context={
             "appointments": appointments,
             "date_filter": date,
             "status_filter": status
@@ -224,17 +254,21 @@ def index(
     )
 
 
-# -----------------------------
-# Add Appointment
-# -----------------------------
+# =========================
+# ADD APPOINTMENT
+# =========================
 
-@app.get("/add", response_class=HTMLResponse)
+@app.get(
+    "/add",
+    response_class=HTMLResponse,
+    name="add_page"
+)
 def add_page(request: Request):
 
     return templates.TemplateResponse(
-        "form.html",
-        {
-            "request": request,
+        request=request,
+        name="form.html",
+        context={
             "appointment": {},
             "mode": "Add",
             "error": None
@@ -242,13 +276,21 @@ def add_page(request: Request):
     )
 
 
-@app.post("/add")
+@app.post(
+    "/add",
+    name="add"
+)
 def add(
     request: Request,
+
     title: str = Form(...),
+
     description: str = Form(""),
+
     date: str = Form(...),
+
     start_time: str = Form(...),
+
     end_time: str = Form(...)
 ):
 
@@ -270,9 +312,9 @@ def add(
         }
 
         return templates.TemplateResponse(
-            "form.html",
-            {
-                "request": request,
+            request=request,
+            name="form.html",
+            context={
                 "appointment": appointment,
                 "mode": "Add",
                 "error": error
@@ -304,19 +346,24 @@ def add(
     conn.commit()
     conn.close()
 
+    message = quote_plus(
+        "Appointment added successfully."
+    )
+
     return RedirectResponse(
-        url="/?message=Appointment+added+successfully.",
+        url=f"/?message={message}",
         status_code=303
     )
 
 
-# -----------------------------
-# Edit Appointment
-# -----------------------------
+# =========================
+# EDIT APPOINTMENT
+# =========================
 
 @app.get(
     "/edit/{appointment_id}",
-    response_class=HTMLResponse
+    response_class=HTMLResponse,
+    name="edit_page"
 )
 def edit_page(
     request: Request,
@@ -338,36 +385,50 @@ def edit_page(
 
     if not appointment:
 
+        error = quote_plus(
+            "Appointment not found."
+        )
+
         return RedirectResponse(
-            url="/?error=Appointment+not+found.",
+            url=f"/?error={error}",
             status_code=303
         )
 
     return templates.TemplateResponse(
-        "form.html",
-        {
-            "request": request,
+        request=request,
+        name="form.html",
+        context={
             "appointment": appointment,
             "mode": "Edit",
-            "error": None
+            "error": None,
+            "appointment_id": appointment_id
         }
     )
 
 
-@app.post("/edit/{appointment_id}")
+@app.post(
+    "/edit/{appointment_id}",
+    name="edit"
+)
 def edit(
     request: Request,
+
     appointment_id: int,
+
     title: str = Form(...),
+
     description: str = Form(""),
+
     date: str = Form(...),
+
     start_time: str = Form(...),
+
     end_time: str = Form(...)
 ):
 
     conn = get_db()
 
-    appointment = conn.execute(
+    existing = conn.execute(
         """
         SELECT *
         FROM appointments
@@ -378,10 +439,14 @@ def edit(
 
     conn.close()
 
-    if not appointment:
+    if not existing:
+
+        error = quote_plus(
+            "Appointment not found."
+        )
 
         return RedirectResponse(
-            url="/?error=Appointment+not+found.",
+            url=f"/?error={error}",
             status_code=303
         )
 
@@ -395,7 +460,7 @@ def edit(
 
     if error:
 
-        updated_appointment = {
+        appointment = {
             "title": title,
             "description": description,
             "date": date,
@@ -404,10 +469,10 @@ def edit(
         }
 
         return templates.TemplateResponse(
-            "form.html",
-            {
-                "request": request,
-                "appointment": updated_appointment,
+            request=request,
+            name="form.html",
+            context={
+                "appointment": appointment,
                 "mode": "Edit",
                 "error": error,
                 "appointment_id": appointment_id
@@ -438,20 +503,25 @@ def edit(
     conn.commit()
     conn.close()
 
+    message = quote_plus(
+        "Appointment updated successfully."
+    )
+
     return RedirectResponse(
-        url="/?message=Appointment+updated+successfully.",
+        url=f"/?message={message}",
         status_code=303
     )
 
 
-# -----------------------------
-# Complete Appointment
-# -----------------------------
+# =========================
+# COMPLETE APPOINTMENT
+# =========================
 
-@app.post("/complete/{appointment_id}")
-def complete(
-    appointment_id: int
-):
+@app.post(
+    "/complete/{appointment_id}",
+    name="complete"
+)
+def complete(appointment_id: int):
 
     conn = get_db()
 
@@ -460,7 +530,7 @@ def complete(
         UPDATE appointments
         SET status = 'Completed'
         WHERE id = ?
-          AND status = 'Scheduled'
+        AND status = 'Scheduled'
         """,
         (appointment_id,)
     )
@@ -471,27 +541,35 @@ def complete(
     conn.close()
 
     if changed:
-        message = "Appointment marked as completed."
-        url = "/?message=" + urlencode(
-            {"message": message}
-        ).split("=", 1)[1]
-    else:
-        url = "/?error=Only+scheduled+appointments+can+be+completed."
+
+        message = quote_plus(
+            "Appointment marked as completed."
+        )
+
+        return RedirectResponse(
+            url=f"/?message={message}",
+            status_code=303
+        )
+
+    error = quote_plus(
+        "Only scheduled appointments can be completed."
+    )
 
     return RedirectResponse(
-        url=url,
+        url=f"/?error={error}",
         status_code=303
     )
 
 
-# -----------------------------
-# Cancel Appointment
-# -----------------------------
+# =========================
+# CANCEL APPOINTMENT
+# =========================
 
-@app.post("/cancel/{appointment_id}")
-def cancel(
-    appointment_id: int
-):
+@app.post(
+    "/cancel/{appointment_id}",
+    name="cancel"
+)
+def cancel(appointment_id: int):
 
     conn = get_db()
 
@@ -500,7 +578,7 @@ def cancel(
         UPDATE appointments
         SET status = 'Cancelled'
         WHERE id = ?
-          AND status = 'Scheduled'
+        AND status = 'Scheduled'
         """,
         (appointment_id,)
     )
@@ -511,22 +589,29 @@ def cancel(
     conn.close()
 
     if changed:
-        url = "/?message=Appointment+cancelled."
-    else:
-        url = (
-            "/?error="
-            "Only+scheduled+appointments+can+be+cancelled."
+
+        message = quote_plus(
+            "Appointment cancelled."
         )
 
+        return RedirectResponse(
+            url=f"/?message={message}",
+            status_code=303
+        )
+
+    error = quote_plus(
+        "Only scheduled appointments can be cancelled."
+    )
+
     return RedirectResponse(
-        url=url,
+        url=f"/?error={error}",
         status_code=303
     )
 
 
-# -----------------------------
-# Application startup
-# -----------------------------
+# =========================
+# STARTUP
+# =========================
 
 @app.on_event("startup")
 def startup():

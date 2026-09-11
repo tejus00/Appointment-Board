@@ -3,3 +3,7 @@ fastapi
 uvicorn[standard]
 jinja2
 python-multipart
+fastapi
+uvicorn[standard]
+jinja2
+python-multipart
