@@ -1,6 +1,8 @@
 # Appointment Board
 
-A simple **Flask + SQLite appointment management board** for a small team.
+A simple **FastAPI + SQLite appointment management board** for a small team.
+
+The application provides an easy way to view, add, edit, complete, cancel, and filter appointments while preventing overlapping time slots.
 
 ## Features
 
@@ -15,12 +17,15 @@ A simple **Flask + SQLite appointment management board** for a small team.
 * 🚫 Prevent overlapping appointments
 * 📌 Keep cancelled appointments visible and clearly marked
 * 🔄 Cancelled appointments do not block the same time slot
+* 📖 Automatic API documentation with FastAPI Swagger UI
 
 ## Tech Stack
 
-* **Backend:** Python, Flask
+* **Backend:** Python, FastAPI
+* **ASGI Server:** Uvicorn
 * **Database:** SQLite
 * **Frontend:** HTML, CSS, Jinja2
+* **API Documentation:** Swagger UI / OpenAPI
 * **Version Control:** Git & GitHub
 
 ## Project Structure
@@ -28,7 +33,7 @@ A simple **Flask + SQLite appointment management board** for a small team.
 ```text
 Appointment-Board/
 │
-├── app.py
+├── main.py
 ├── appointments.db
 ├── requirements.txt
 ├── README.md
@@ -72,10 +77,10 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 4. Run the application
+### 4. Start the FastAPI application
 
 ```bash
-python app.py
+uvicorn main:app --reload
 ```
 
 ### 5. Open the application
@@ -83,10 +88,28 @@ python app.py
 Open your browser and visit:
 
 ```text
-http://127.0.0.1:5000
+http://127.0.0.1:8000
 ```
 
-The SQLite database is created automatically when the application is first started.
+The SQLite database is created automatically when the application starts for the first time.
+
+## API Documentation
+
+FastAPI automatically generates interactive API documentation.
+
+### Swagger UI
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+### ReDoc
+
+```text
+http://127.0.0.1:8000/redoc
+```
+
+These pages can be used to view and test the available API routes.
 
 ## How It Works
 
@@ -100,73 +123,11 @@ The SQLite database is created automatically when the application is first start
    * Date
    * Start time
    * End time
-5. The application validates the appointment details.
+5. FastAPI validates the appointment details.
 6. The application checks whether the selected time overlaps with an existing scheduled appointment.
-7. If valid, the appointment is added to the board.
+7. If the information is valid, the appointment is stored in SQLite.
 8. Existing appointments can be edited.
-9. Scheduled appointments can be marked as completed or cancelled.
-10. Cancelled appointments remain visible with a **Cancelled** status.
-
-## Appointment Validation
-
-The application checks:
-
-* Required fields are not empty.
-* Start and end times are valid.
-* End time must be later than start time.
-* Two scheduled appointments cannot overlap on the same date.
-* Back-to-back appointments are allowed.
-
-For example:
-
-```text
-10:00 – 11:00
-11:00 – 12:00
-```
-
-These appointments are allowed because they do not overlap.
-
-## Statuses
-
-| Status    | Description                    |
-| --------- | ------------------------------ |
-| Scheduled | Appointment is active          |
-| Completed | Appointment has been completed |
-| Cancelled | Appointment was cancelled      |
-
-Cancelled appointments remain visible on the board but do not prevent another appointment from using the same time slot.
-
-## Assumptions
-
-1. The application is designed for one shared team calendar.
-2. Any overlapping scheduled appointment is considered a conflict.
-3. Back-to-back appointments are allowed.
-4. Cancelled appointments remain stored in the database.
-5. Cancelled appointments are excluded from time-slot conflict checks.
-6. Completed and cancelled appointments can still be edited.
-7. Only scheduled appointments can be completed or cancelled.
-8. Authentication and user-specific permissions are outside the scope of this project.
-
-## GitHub
-
-Repository:
-
-https://github.com/tejus00/Appointment-Board
-
-## Future Improvements
-
-Possible enhancements include:
-
-* User authentication
-* Multiple team calendars
-* Email notifications
-* Calendar view
-* Recurring appointments
-* Search functionality
-* REST API
-* Deployment to a cloud platform
-* Role-based access control
-
-## License
-
-This project is created for educational and demonstration purposes.
+9. Scheduled appointments can be marked as completed.
+10. Scheduled appointments can be cancelled.
+11. Cancelled appointments remain visible and are clearly marked.
+12. Cancelled appointments do not block another appoi
